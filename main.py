@@ -32,22 +32,31 @@ def main():
             response.raise_for_status()
             check_for_redirect(response)
             soup = BeautifulSoup(response.text, 'lxml')
+
             book_selector = soup.find('div', {'id': 'content'})
             about_book = book_selector.find('h1')
             title, author = about_book.text.split("::")
-            path_to_url = [i['href'] for i in book_selector.find_all('a', href=True) if i.text == 'скачать txt']
+            path_to_url = [src['href'] for src in book_selector.find_all('a', href=True) if src.text == 'скачать txt']
             if not path_to_url:
                 continue
             book = f'{title.strip()}.txt'
+            print(book)
             download_url = urljoin(base_url, path_to_url[0])
             download(download_url, book)
 
             images_selector = "table.tabs div.bookimage img"
             img_src = soup.select(images_selector)[0]["src"]
             img_url = urljoin(base_url, img_src)
-            img = urlparse(img_url).path.split('/')[-1]
-            print(img_url)
-            download(img_url, img, folder='images/')
+            img_name = urlparse(img_url).path.split('/')[-1]
+            download(img_url, img_name, folder='images/')
+
+            comments_selector = "table.tabs div.texts span.black"
+            book_comments = soup.select(comments_selector)
+            comments = [comment.text for comment in book_comments]
+
+            genre_selector = "table.tabs span.d_book a"
+            book_genres = soup.select(genre_selector)
+            genrs = [genre.text for genre in book_genres]
 
         except requests.HTTPError:
             print("There is no such book")
