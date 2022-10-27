@@ -75,9 +75,9 @@ def main():
     args = parser.parse_args()
     start = args.start_id
     end = args.end_id
-    for book in range(start, end):
+    for book_id in range(start, end):
         try:
-            url = f"{base_url}/b{id}/"
+            url = f"{base_url}/b{book_id}/"
             response = requests.get(url)
             response.raise_for_status()
             check_for_redirect(response)
@@ -99,6 +99,7 @@ def main():
         except requests.HTTPError:
             print("There is no such book")
             continue
+
 
 if __name__ == "__main__":
     main()
