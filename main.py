@@ -4,7 +4,7 @@ from pathlib import Path
 from pathvalidate import sanitize_filename
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from urllib.parse import urlparse, unquote
+from urllib.parse import urlparse
 
 
 def check_for_redirect(response):
@@ -12,15 +12,58 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def download(url, filename, folder='books/'):
+def download_txt(url, filename, folder='books/'):
     Path(folder).mkdir(parents=True, exist_ok=True)
     response = requests.get(url)
-    check_for_redirect(response)
     response.raise_for_status()
+    check_for_redirect(response)
     pure_filename = sanitize_filename(filename)
-    path_to_save = os.path.join(folder, pure_filename)
+    title = f"{pure_filename}.txt"
+    path_to_save = os.path.join(folder, title)
     with open(path_to_save, "wb") as file:
         file.write(response.content)
+
+
+def download_image(url, filename, folder='images/'):
+    Path(folder).mkdir(parents=True, exist_ok=True)
+    response = requests.get(url)
+    response.raise_for_status()
+    check_for_redirect(response)
+    path_to_save = os.path.join(folder, filename)
+    with open(path_to_save, "wb") as file:
+        file.write(response.content)
+
+
+def parse_book_page(response):
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    book_selector = soup.find('div', {'id': 'content'})
+    about_book = book_selector.find('h1')
+    title, author = about_book.text.split("::")
+    book_url = [src['href'] for src in book_selector.find_all('a', href=True) if src.text == 'скачать txt']
+
+    images_selector = "table.tabs div.bookimage img"
+    img_url = soup.select(images_selector)[0]["src"]
+    img_name = urlparse(img_url).path.split('/')[-1]
+
+    comments_selector = "table.tabs div.texts span.black"
+    book_comments = soup.select(comments_selector)
+    comments = [comment.text for comment in book_comments]
+
+    genre_selector = "table.tabs span.d_book a"
+    book_genres = soup.select(genre_selector)
+    genrs = [genre.text for genre in book_genres]
+
+    book = {
+        'title': title.strip(),
+        'author': author.strip(),
+        'book_url': book_url[0] if book_url else None,
+        'img_url': img_url,
+        'img_name': img_name,
+        'comments': comments,
+        'genrs': genrs
+    }
+    return book
 
 
 def main():
@@ -31,32 +74,20 @@ def main():
             response = requests.get(url)
             response.raise_for_status()
             check_for_redirect(response)
-            soup = BeautifulSoup(response.text, 'lxml')
 
-            book_selector = soup.find('div', {'id': 'content'})
-            about_book = book_selector.find('h1')
-            title, author = about_book.text.split("::")
-            path_to_url = [src['href'] for src in book_selector.find_all('a', href=True) if src.text == 'скачать txt']
-            if not path_to_url:
+            book = parse_book_page(response)
+
+            book_title = book.get("title")
+            book_url = book.get("book_url")
+            if not book_url:
                 continue
-            book = f'{title.strip()}.txt'
-            print(book)
-            download_url = urljoin(base_url, path_to_url[0])
-            download(download_url, book)
+            full_url = urljoin(base_url, book_url)
+            download_txt(full_url, book_title)
 
-            images_selector = "table.tabs div.bookimage img"
-            img_src = soup.select(images_selector)[0]["src"]
-            img_url = urljoin(base_url, img_src)
-            img_name = urlparse(img_url).path.split('/')[-1]
-            download(img_url, img_name, folder='images/')
-
-            comments_selector = "table.tabs div.texts span.black"
-            book_comments = soup.select(comments_selector)
-            comments = [comment.text for comment in book_comments]
-
-            genre_selector = "table.tabs span.d_book a"
-            book_genres = soup.select(genre_selector)
-            genrs = [genre.text for genre in book_genres]
+            img_name = book.get('img_name')
+            img_url = book.get('img_url')
+            full_url = urljoin(base_url, img_url)
+            download_image(full_url, img_name)
 
         except requests.HTTPError:
             print("There is no such book")
