@@ -1,5 +1,6 @@
 import requests
 import os
+import argparse
 from pathlib import Path
 from pathvalidate import sanitize_filename
 from bs4 import BeautifulSoup
@@ -68,7 +69,13 @@ def parse_book_page(response):
 
 def main():
     base_url = 'https://tululu.org/'
-    for id in range(1, 11):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--start_id', default=1, type=int, help='start_value')
+    parser.add_argument('-e', '--end_id', default=10, type=int, help='end_value')
+    args = parser.parse_args()
+    start = args.start_id
+    end = args.end_id
+    for book in range(start, end):
         try:
             url = f"{base_url}/b{id}/"
             response = requests.get(url)
