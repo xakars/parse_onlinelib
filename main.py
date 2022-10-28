@@ -38,11 +38,12 @@ def download_image(url, filename, folder="images/"):
 
 def parse_book_page(response):
     soup = BeautifulSoup(response.text, "lxml")
-
     book_selector = soup.find("div", {"id": "content"})
     about_book = book_selector.find("h1")
     title, author = about_book.text.split("::")
-    book_url = [src["href"] for src in book_selector.find_all("a", href=True) if src.text == "скачать txt"]
+
+    book_url_selector = book_selector.find_all("a", string="скачать txt")
+    book_url = book_url_selector[0]["href"] if book_url_selector else None
 
     images_selector = "table.tabs div.bookimage img"
     img_url = soup.select(images_selector)[0]["src"]
@@ -59,8 +60,8 @@ def parse_book_page(response):
     book = {
         "title": title.strip(),
         "author": author.strip(),
-        "book_url": book_url[0] if book_url else None,
-        "img_url": img_url,
+        "book_url": urljoin(response.url, book_url),
+        "img_url": urljoin(response.url, img_url),
         "img_name": img_name,
         "comments": comments,
         "genrs": genrs
@@ -81,7 +82,7 @@ def main():
     attempts_conn = 0
     for book_id in range(start, end):
         try:
-            url = f"{base_url}/b{book_id}/"
+            url = f"{base_url}b{book_id}/"
             response = requests.get(url)
             response.raise_for_status()
             check_for_redirect(response)
@@ -113,7 +114,6 @@ def main():
             else:
                 time.sleep(10)
                 continue
-
 
 
 if __name__ == "__main__":
