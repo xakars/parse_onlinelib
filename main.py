@@ -14,7 +14,7 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def download_txt(url, filename, folder='books/'):
+def download_txt(url, filename, folder="books/"):
     Path(folder).mkdir(parents=True, exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
@@ -26,7 +26,7 @@ def download_txt(url, filename, folder='books/'):
         file.write(response.content)
 
 
-def download_image(url, filename, folder='images/'):
+def download_image(url, filename, folder="images/"):
     Path(folder).mkdir(parents=True, exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
@@ -37,16 +37,16 @@ def download_image(url, filename, folder='images/'):
 
 
 def parse_book_page(response):
-    soup = BeautifulSoup(response.text, 'lxml')
+    soup = BeautifulSoup(response.text, "lxml")
 
-    book_selector = soup.find('div', {'id': 'content'})
-    about_book = book_selector.find('h1')
+    book_selector = soup.find("div", {"id": "content"})
+    about_book = book_selector.find("h1")
     title, author = about_book.text.split("::")
-    book_url = [src['href'] for src in book_selector.find_all('a', href=True) if src.text == 'скачать txt']
+    book_url = [src["href"] for src in book_selector.find_all("a", href=True) if src.text == "скачать txt"]
 
     images_selector = "table.tabs div.bookimage img"
     img_url = soup.select(images_selector)[0]["src"]
-    img_name = urlparse(img_url).path.split('/')[-1]
+    img_name = urlparse(img_url).path.split("/")[-1]
 
     comments_selector = "table.tabs div.texts span.black"
     book_comments = soup.select(comments_selector)
@@ -57,24 +57,24 @@ def parse_book_page(response):
     genrs = [genre.text for genre in book_genres]
 
     book = {
-        'title': title.strip(),
-        'author': author.strip(),
-        'book_url': book_url[0] if book_url else None,
-        'img_url': img_url,
-        'img_name': img_name,
-        'comments': comments,
-        'genrs': genrs
+        "title": title.strip(),
+        "author": author.strip(),
+        "book_url": book_url[0] if book_url else None,
+        "img_url": img_url,
+        "img_name": img_name,
+        "comments": comments,
+        "genrs": genrs
     }
     return book
 
 
 def main():
-    base_url = 'https://tululu.org/'
+    base_url = "https://tululu.org/"
     parser = argparse.ArgumentParser(
-        description='scrip can parse https://tululu.org/ site and download books with images.'
+        description="scrip can parse https://tululu.org/ site and download books with images."
     )
-    parser.add_argument('-s', '--start_id', default=1, type=int, help='set up start_value')
-    parser.add_argument('-e', '--end_id', default=10, type=int, help='set up end_value')
+    parser.add_argument("-s", "--start_id", default=1, type=int, help="set up start_value")
+    parser.add_argument("-e", "--end_id", default=10, type=int, help="set up end_value")
     args = parser.parse_args()
     start = args.start_id
     end = args.end_id
@@ -95,8 +95,8 @@ def main():
             full_url = urljoin(base_url, book_url)
             download_txt(full_url, book_title)
 
-            img_name = book.get('img_name')
-            img_url = book.get('img_url')
+            img_name = book.get("img_name")
+            img_url = book.get("img_url")
             full_url = urljoin(base_url, img_url)
             download_image(full_url, img_name)
 
