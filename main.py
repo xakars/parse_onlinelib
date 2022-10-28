@@ -1,6 +1,7 @@
 import requests
 import os
 import argparse
+import time
 from pathlib import Path
 from pathvalidate import sanitize_filename
 from bs4 import BeautifulSoup
@@ -69,12 +70,15 @@ def parse_book_page(response):
 
 def main():
     base_url = 'https://tululu.org/'
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--start_id', default=1, type=int, help='start_value')
-    parser.add_argument('-e', '--end_id', default=10, type=int, help='end_value')
+    parser = argparse.ArgumentParser(
+        description='scrip can parse https://tululu.org/ site and download books with images.'
+    )
+    parser.add_argument('-s', '--start_id', default=1, type=int, help='set up start_value')
+    parser.add_argument('-e', '--end_id', default=10, type=int, help='set up end_value')
     args = parser.parse_args()
     start = args.start_id
     end = args.end_id
+    attempts_conn = 0
     for book_id in range(start, end):
         try:
             url = f"{base_url}/b{book_id}/"
@@ -96,11 +100,21 @@ def main():
             full_url = urljoin(base_url, img_url)
             download_image(full_url, img_name)
 
+            attempts_conn = 0
+
         except requests.HTTPError:
             print("There is no such book")
             continue
+        except requests.ConnectionError:
+            print("Are you connected to your internet?")
+            attempts_conn += 1
+            if attempts_conn == 1:
+                continue
+            else:
+                time.sleep(10)
+                continue
+
 
 
 if __name__ == "__main__":
     main()
-
