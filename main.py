@@ -41,12 +41,10 @@ def parse_book_page(response):
     book_selector = soup.find("div", {"id": "content"})
     about_book = book_selector.find("h1")
     title, author = about_book.text.split("::")
-
-    book_url_selector = book_selector.find_all("a", string="скачать txt")
-    book_url = book_url_selector[0]["href"] if book_url_selector else None
-
+    book_url_selector = book_selector.find("a", string="скачать txt")
+    book_url = book_url_selector["href"] if book_url_selector else None
     images_selector = "table.tabs div.bookimage img"
-    img_url = soup.select(images_selector)[0]["src"]
+    img_url = soup.select_one(images_selector).get("src")
     img_name = urlparse(img_url).path.split("/")[-1]
 
     comments_selector = "table.tabs div.texts span.black"
@@ -93,13 +91,11 @@ def main():
             book_url = book.get("book_url")
             if not book_url:
                 continue
-            full_url = urljoin(base_url, book_url)
-            download_txt(full_url, book_title)
+            download_txt(book_url, book_title)
 
             img_name = book.get("img_name")
             img_url = book.get("img_url")
-            full_url = urljoin(base_url, img_url)
-            download_image(full_url, img_name)
+            download_image(img_url, img_name)
 
             attempts_conn = 0
 
