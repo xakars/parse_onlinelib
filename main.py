@@ -15,7 +15,7 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def download_txt(url, filename, folder="books/"):
+def download_txt(url, filename, folder="./books/"):
     Path(folder).mkdir(parents=True, exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
@@ -27,7 +27,7 @@ def download_txt(url, filename, folder="books/"):
         file.write(response.content)
 
 
-def download_image(url, filename, folder="images/"):
+def download_image(url, filename, folder="./images/"):
     Path(folder).mkdir(parents=True, exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
@@ -83,11 +83,20 @@ def main():
     parser = argparse.ArgumentParser(
         description="scrip can parse https://tululu.org/ site and download books with images."
     )
-    parser.add_argument("-s", "--start_id", default=1, type=int, help="set up start_value")
-    parser.add_argument("-e", "--end_id", default=10, type=int, help="set up end_value")
+    parser.add_argument("-s", "--start_page", default=1, type=int, help="set up start_page")
+    parser.add_argument("-e", "--end_page", default=702, type=int, help="set up end_page")
+    parser.add_argument("--dest_folder", default=".", help="specify download folder for books, images, JSON")
+    parser.add_argument("--skip_imgs", default=False, type=bool, help="set to 1 if you don't want download images")
+    parser.add_argument("--skip_txt", default=False, type=bool, help="set to 1 if you don't want download texts")
+    parser.add_argument("--json_path", default="books", help="specify json file where you want to save info about books")
+
     args = parser.parse_args()
-    start = args.start_id
-    end = args.end_id
+    start = args.start_page
+    end = args.end_page
+    download_dir = args.dest_folder
+    skip_imgs = args.skip_imgs
+    skip_txt = args.skip_txt
+    json_path = args.json_path
     attempts_conn = 0
 
     book_urls = get_books_from_catalog(start, end)
@@ -100,18 +109,21 @@ def main():
 
             book = parse_book_page(response)
 
-            book_title = book.get("title")
             download_url = book.get("download_url")
             if not download_url:
                 continue
-
             books.append(book)
 
-            download_txt(download_url, book_title)
+            if not skip_txt:
+                book_title = book.get("title")
+                book_folder = f"{download_dir}/books/"
+                download_txt(download_url, book_title, book_folder)
 
-            img_name = book.get("img_name")
-            img_url = book.get("img_url")
-            download_image(img_url, img_name)
+            if not skip_imgs:
+                img_folder = f"{download_dir}/images/"
+                img_name = book.get("img_name")
+                img_url = book.get("img_url")
+                download_image(img_url, img_name, img_folder)
 
             attempts_conn = 0
 
@@ -128,7 +140,7 @@ def main():
                 continue
 
     books_json = json.dumps(books, ensure_ascii=False)
-    with open("books.json", "w") as my_file:
+    with open(f"{download_dir}/{json_path}.json", "w") as my_file:
         my_file.write(books_json)
 
 
