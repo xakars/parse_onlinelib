@@ -65,6 +65,7 @@ def parse_book_page(response):
     }
     return book
 
+
 def get_books_from_catalog(start, end):
     book_urls = []
     for page in range(start, end):
@@ -146,3 +147,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
