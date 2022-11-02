@@ -132,11 +132,11 @@ def main():
 
             if not skip_txt:
                 book_title = book.get("title")
-                book_folder = f"{download_dir}/books/"
+                book_folder = os.path.join(download_dir, "books")
                 download_txt(download_url, book_title, book_folder)
 
             if not skip_imgs:
-                img_folder = f"{download_dir}/images/"
+                img_folder = os.path.join(download_dir, "images")
                 img_name = book.get("img_name")
                 img_url = book.get("img_url")
                 download_image(img_url, img_name, img_folder)
@@ -156,7 +156,8 @@ def main():
                 continue
 
     books_json = json.dumps(books, ensure_ascii=False)
-    with open(f"{download_dir}/{json_path}.json", "w") as my_file:
+    books_json_path = os.path.join(download_dir, json_path)
+    with open(f"{books_json_path}.json", "w") as my_file:
         my_file.write(books_json)
 
 
