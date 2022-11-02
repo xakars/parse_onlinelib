@@ -155,10 +155,9 @@ def main():
                 time.sleep(10)
                 continue
 
-    books_json = json.dumps(books, ensure_ascii=False)
     books_json_path = os.path.join(download_dir, json_path)
-    with open(f"{books_json_path}.json", "w") as my_file:
-        my_file.write(books_json)
+    with open(f"{books_json_path}.json", "w") as file:
+        json.dump(books, file, ensure_ascii=False)
 
 
 if __name__ == "__main__":
