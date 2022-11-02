@@ -66,17 +66,32 @@ def parse_book_page(response):
     return book
 
 
-def get_books_from_catalog(start, end):
+def get_books_urls_from_catalog(start, end):
     book_urls = []
+    attempts_conn = 0
     for page in range(start, end):
-        url = f"https://tululu.org/l55/{page}"
-        response = requests.get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'lxml')
-        selector = ".d_book tr:nth-of-type(2) a"
-        books = soup.select(selector)
-        for book in books:
-            book_urls.append(urljoin(response.url, book["href"]))
+        try:
+            url = f"https://tululu.org/l55/{page}"
+            response = requests.get(url)
+            response.raise_for_status()
+            check_for_redirect(response)
+            soup = BeautifulSoup(response.text, 'lxml')
+            selector = ".d_book tr:nth-of-type(2) a"
+            books = soup.select(selector)
+            for book in books:
+                book_urls.append(urljoin(response.url, book["href"]))
+            attempts_conn = 0
+        except requests.HTTPError:
+            print("There is no such page from catalog")
+            continue
+        except requests.ConnectionError:
+            print("Are you connected to your internet?")
+            attempts_conn += 1
+            if attempts_conn == 1:
+                continue
+            else:
+                time.sleep(10)
+                continue
     return book_urls
 
 
@@ -100,7 +115,7 @@ def main():
     json_path = args.json_path
     attempts_conn = 0
 
-    book_urls = get_books_from_catalog(start, end)
+    book_urls = get_books_urls_from_catalog(start, end)
     books = []
     for book_url in book_urls:
         try:
@@ -147,4 +162,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
