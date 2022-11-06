@@ -25,6 +25,7 @@
                     <div class="card-body">
                       <h5 class="card-title">{{book.title}}</h5>
                       <p class="card-text">{{book.author}}</p>
+                      <a  href="/books/books/{{book.title | urlencode}}.txt" target="_blank">Читать</a>
                       <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
                     </div>
                   </div>
