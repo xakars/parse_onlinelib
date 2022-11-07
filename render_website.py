@@ -1,4 +1,6 @@
 import json
+import os
+from pathlib import Path
 from more_itertools import chunked
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -15,11 +17,21 @@ with open("books/books.json", "r") as file:
 
 books = json.loads(books_json)
 books_row = list(chunked(books, 2))
+chunked_books = list(chunked(books_row, 10))
 
-rendered_page = template.render(books_row=books_row)
+Path("pages").mkdir(parents=True, exist_ok=True)
+index_dir = "pages"
 
-with open('index.html', 'w', encoding="utf8") as file:
-    file.write(rendered_page)
+for index, books in enumerate(chunked_books, 1):
+    file_name = f"index{index}.html"
+    path_to_keep = os.path.join(index_dir, file_name)
+    with open(path_to_keep, "w", encoding="utf8") as file:
+        rendered_page = template.render(
+            books_row=books,
+            pages_count=len(chunked_books),
+            current_page = index
+        )
+        file.write(rendered_page)
 
 server = HTTPServer(('0.0.0.0', 8000), SimpleHTTPRequestHandler)
 server.serve_forever()
