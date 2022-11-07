@@ -29,3 +29,5 @@ python main.py -s 700 -e 701 --dest_folder my_dir --skip_imgs 1  --json_path gai
 ```
 Приведенная выше команда скачает книги начиная со страниц  700 по 701 в папку `my_dir`, при этом 
 изображения книг не будут скачиваться, а информация о книгах будут сохранены в файл `gain.json`.
+
+Ознакомиться демо версией сайта можно по [ссылке](https://xakars.github.io/parse_onlinelib/pages/index1.html).
