@@ -13,9 +13,8 @@ env = Environment(
 template = env.get_template('template.html')
 
 with open("books/books.json", "r") as file:
-    books_json = file.read()
+    books = json.load(file)
 
-books = json.loads(books_json)
 books_row = list(chunked(books, 2))
 chunked_books = list(chunked(books_row, 10))
 
