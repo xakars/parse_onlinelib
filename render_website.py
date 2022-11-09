@@ -15,8 +15,10 @@ template = env.get_template('template.html')
 with open("books/books.json", "r") as file:
     books = json.load(file)
 
-books_row = list(chunked(books, 2))
-chunked_books = list(chunked(books_row, 10))
+rows_per_page = 2
+books_row = list(chunked(books, rows_per_page))
+books_per_page = 10
+chunked_books = list(chunked(books_row, books_per_page))
 
 Path("pages").mkdir(parents=True, exist_ok=True)
 index_dir = "pages"
